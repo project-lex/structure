@@ -1,0 +1,16 @@
+FROM python:3.11-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git openssh-client ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir pyyaml
+
+WORKDIR /app
+
+# Copy only the script - the repo will be mounted at runtime so config can come from the host
+COPY scripts/clone_repos.py /app/clone_repos.py
+
+ENTRYPOINT ["python", "/app/clone_repos.py"]
