@@ -1,8 +1,10 @@
-.PHONY: clone dry-run install-deps docker-build cm
+.PHONY: clone dry-run install-deps docker-build cm up down dns-setup
 
 # Image name (override when calling make: `make IMAGE_NAME=your/name build`)
 IMAGE_NAME ?= project-lex/clone:latest
 DOCKERFILE ?= scripts/Dockerfile.clone
+
+DNS_IMAGE := alpine:3.20
 
 # Build the small container image used to run the clone script.
 docker-build:
@@ -28,13 +30,26 @@ cm:
 	fi
 	@echo "Building project-lex/config-management:dev-local from ../config-management"
 	@cd ../config-management && docker build -t project-lex/config-management:dev-local .
-	@cd ./ && docker compose up -d
+	@cd ./ && docker compose --env-file docker/.env up -d
 
 
 up:
-	docker compose up -d
+	docker compose --env-file docker/.env up -d
 
 down:
-	docker compose down
+	docker compose --env-file docker/.env down
+
+# Writes project-lex hostnames into the system hosts file via a temporary Docker container.
+# Windows: run Git Bash as Administrator. Linux/macOS: sudo prompt will appear.
+dns-setup:
+	@HOSTS_FILE=$$(bash scripts/setup_local_dns.sh) && \
+	docker run --rm \
+		-v "$$HOSTS_FILE:/host/hosts:ro" \
+		-v "$(abspath scripts/dns_patch_hosts.sh):/dns_patch.sh:ro" \
+		-v "$(abspath docker/Corefile):/Corefile:ro" \
+		$(DNS_IMAGE) sh /dns_patch.sh \
+	| sudo tee "$$HOSTS_FILE" > /dev/null && \
+	echo "Updated $$HOSTS_FILE"
 
 
+setup: clone dns-setup

@@ -1,0 +1,17 @@
+.:53 {
+    errors
+    cache 30
+    forward . 8.8.8.8 8.8.4.4
+    log
+}
+
+# Local domain resolution
+local. {
+    errors
+    hosts {
+        172.17.0.1 vault.localhost
+        172.17.0.1 timescaledb.localhost
+        172.17.0.1 mongodb.localhost
+        172.17.0.1 config-management.localhost
+    }
+}

@@ -2,8 +2,9 @@
 
 set -e
 
-# Load DB password from Docker secret
+# Load DB passwords from Docker secrets
 DB_PASSWORD=$(<secrets/postgres_password.txt)
+MONGO_PASSWORD=$(<secrets/mongo_password.txt)
 
 echo "⏳ Waiting for Vault container to be ready..."
 until curl -s http://localhost:8200/v1/sys/health > /dev/null; do sleep 1; done
@@ -48,5 +49,33 @@ path "database/creds/timescale-role" {
 }
 EOF
 
-echo "🔑 Creating token for dynamic DB access..."
-docker exec -e VAULT_ADDR=http://localhost:8200 -e VAULT_TOKEN=root vault sh -c 'vault token create -policy=timescale-reader -ttl=2h'
+echo "� Running MongoDB setup inside Vault..."
+docker exec -e VAULT_ADDR=http://localhost:8200 \
+            -e VAULT_TOKEN=root \
+            -e MONGO_PASSWORD="$MONGO_PASSWORD" \
+            vault sh -c 'vault secrets enable database || true'
+
+echo "🔗 Configuring MongoDB connection..."
+docker exec -e VAULT_ADDR=http://localhost:8200 \
+            -e VAULT_TOKEN=root \
+            -e MONGO_PASSWORD="$MONGO_PASSWORD" \
+            vault sh -c "vault write database/config/mongodb \
+              plugin_name=mongodb-database-plugin \
+              allowed_roles=mongodb-role \
+              connection_url='mongodb://{{username}}:{{password}}@mongodb:27017' \
+              username=\"admin\" password=\"$MONGO_PASSWORD\""
+
+echo "👤 Creating dynamic MongoDB role..."
+docker exec -i -e VAULT_ADDR=http://localhost:8200 \
+            -e VAULT_TOKEN=root \
+            vault sh -c 'vault write database/roles/mongodb-role db_name=mongodb creation_statements='\''{"db":"project-lex","roles":[{"role":"readWrite"}]}'\'', default_ttl="1h" max_ttl="24h"'
+
+echo "📜 Writing MongoDB policy..."
+docker exec -i -e VAULT_ADDR=http://localhost:8200 -e VAULT_TOKEN=root vault sh -c 'vault policy write mongodb-reader -' <<'EOFMONGO'
+path "database/creds/mongodb-role" {
+  capabilities = ["read"]
+}
+EOFMONGO
+
+echo "🔑 Creating token for dynamic MongoDB access..."
+docker exec -e VAULT_ADDR=http://localhost:8200 -e VAULT_TOKEN=root vault sh -c 'vault token create -policy=mongodb-reader -ttl=2h'

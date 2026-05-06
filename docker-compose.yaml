@@ -1,4 +1,22 @@
+networks:
+  project-lex:
+    driver: bridge
+
 services:
+  dns:
+    image: coredns/coredns:latest
+    platform: linux/arm64/v8
+    container_name: dns
+    hostname: dns
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+    volumes:
+      - ./docker/Corefile:/Corefile:ro
+    restart: unless-stopped
+    networks:
+      - project-lex
+
   vault:
     image: hashicorp/vault #initial deploy version
     container_name: vault
@@ -14,6 +32,8 @@ services:
       - .vault_data:/vault/file
     ports:
       - "8200:8200"
+    networks:
+      - project-lex
 
   timescaledb:
     image: timescale/timescaledb:latest-pg15
@@ -37,17 +57,77 @@ services:
                -c work_mem=32MB
                -c maintenance_work_mem=128MB
                -c effective_cache_size=1GB
+    networks:
+      - project-lex
+
   config-management:
     image: project-lex/config-management:dev-local
     container_name: config-management
     ports:
       - "3000:3000"
-    env_file:
-      - docker/.env
+    environment:
+      PORT:               ${CM_PORT}
+      ENV:                ${CM_ENV}
+      GIT_TOKEN:          ${CM_GIT_TOKEN}
+      GIT_USERNAME:       ${CM_GIT_USERNAME}
+      GIT_URL:            ${CM_GIT_URL}
+      GIT_BRANCH:         ${CM_GIT_BRANCH}
+      MONGODB_URI:        ${CM_MONGODB_URI}
+      MONGODB_DB:         ${CM_MONGODB_DB}
+      MONGODB_COLLECTION: ${CM_MONGODB_COLLECTION}
+      VAULT_ADDR:         ${CM_VAULT_ADDR}
+      VAULT_TOKEN:        ${CM_VAULT_TOKEN}
+      VAULT_SECRET_PATH:  ${CM_VAULT_SECRET_PATH}
+      VAULT_NAMESPACE:    ${CM_VAULT_NAMESPACE}
+    networks:
+      - project-lex
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD_FILE=/run/secrets/mongo_password
+      - MONGO_INITDB_DATABASE=project-lex
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    restart: unless-stopped
+    secrets:
+      - mongo_password
+    networks:
+      - project-lex
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    hostname: mongo-express
+    depends_on:
+      - mongodb
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_BASICAUTH=false
+    secrets:
+      - mongo_password
+    entrypoint: ["/bin/sh", "-c", "export ME_CONFIG_MONGODB_ADMINPASSWORD=$(cat /run/secrets/mongo_password) && node app"]
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+    networks:
+      - project-lex
+
 secrets:
   postgres_password:
     file: ./secrets/postgres_password.txt
+  mongo_password:
+    file: ./secrets/mongo_password.txt
 
 volumes:
   timescale_data:
   vault_data:
+  mongodb_data:
+  mongodb_config:
