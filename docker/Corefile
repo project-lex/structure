@@ -5,6 +5,7 @@
         172.17.0.1 filebrowser
         172.17.0.1 mongo-express
         172.17.0.1 config
+        172.17.0.1 vault
     }
     forward . 8.8.8.8 8.8.4.4
     log
