@@ -34,6 +34,13 @@ cm:
 	@cd ../config-management && docker build -t project-lex/config-management:dev-local .
 	@cd ./ && docker compose --env-file docker/.env up -d
 
+cv:
+	@if [ ! -d "$(abspath ../config-validator)" ]; then \
+		echo "Directory ../config-validator not found"; exit 1; \
+	fi
+	@echo "Building project-lex/config-validator:dev-local from ../config-validator"
+	@cd ../config-validator && docker build -t project-lex/config-validator:dev-local .
+	@cd ./ && docker compose --env-file docker/.env up -d
 
 up:
 	docker compose --env-file docker/.env up -d
@@ -43,7 +50,7 @@ down:
 
 up-build: build up vault-setup
 
-build: cm
+build: cm cv
 
 # Writes project-lex hostnames into the system hosts file via a temporary Docker container.
 # Windows: run Git Bash as Administrator. Linux/macOS: sudo prompt will appear.
