@@ -6,8 +6,10 @@ set -e
 DB_PASSWORD=$(<secrets/postgres_password.txt)
 MONGO_PASSWORD=$(<secrets/mongo_password.txt)
 
+VAULT_HOST=${VAULT_HOST:-localhost}
+
 echo "⏳ Waiting for Vault container to be ready..."
-until curl -s http://localhost:8200/v1/sys/health > /dev/null; do sleep 1; done
+until curl -s http://$VAULT_HOST:8200/v1/sys/health > /dev/null; do sleep 1; done
 echo "✅ Vault is up."
 
 echo "🚀 Running Vault setup inside the container..."
@@ -68,7 +70,13 @@ docker exec -e VAULT_ADDR=http://localhost:8200 \
 echo "👤 Creating dynamic MongoDB role..."
 docker exec -i -e VAULT_ADDR=http://localhost:8200 \
             -e VAULT_TOKEN=root \
-            vault sh -c 'vault write database/roles/mongodb-role db_name=mongodb creation_statements='\''{"db":"project-lex","roles":[{"role":"readWrite"}]}'\'', default_ttl="1h" max_ttl="24h"'
+            vault sh -s <<'SH'
+vault write database/roles/mongodb-role \
+  db_name=mongodb \
+  default_ttl=1h \
+  max_ttl=24h \
+  creation_statements='{"db":"project-lex","roles":[{"role":"readWrite"}]}'
+SH
 
 echo "📜 Writing MongoDB policy..."
 docker exec -i -e VAULT_ADDR=http://localhost:8200 -e VAULT_TOKEN=root vault sh -c 'vault policy write mongodb-reader -' <<'EOFMONGO'

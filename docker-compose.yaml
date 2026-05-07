@@ -64,21 +64,21 @@ services:
     image: project-lex/config-management:dev-local
     container_name: config-management
     ports:
-      - "3000:3000"
+      - "4000:3000"
     environment:
-      PORT:               ${CM_PORT}
-      ENV:                ${CM_ENV}
-      GIT_TOKEN:          ${CM_GIT_TOKEN}
-      GIT_USERNAME:       ${CM_GIT_USERNAME}
-      GIT_URL:            ${CM_GIT_URL}
-      GIT_BRANCH:         ${CM_GIT_BRANCH}
-      MONGODB_URI:        ${CM_MONGODB_URI}
-      MONGODB_DB:         ${CM_MONGODB_DB}
+      PORT: ${CM_PORT}
+      NODE_ENV: ${CM_NODE_ENV}
+      GIT_TOKEN: ${CM_GIT_TOKEN}
+      GIT_USERNAME: ${CM_GIT_USERNAME}
+      GIT_URL: ${CM_GIT_URL}
+      GIT_BRANCH: ${CM_GIT_BRANCH}
+      MONGODB_URI: ${CM_MONGODB_URI}
+      MONGODB_DB: ${CM_MONGODB_DB}
       MONGODB_COLLECTION: ${CM_MONGODB_COLLECTION}
-      VAULT_ADDR:         ${CM_VAULT_ADDR}
-      VAULT_TOKEN:        ${CM_VAULT_TOKEN}
-      VAULT_SECRET_PATH:  ${CM_VAULT_SECRET_PATH}
-      VAULT_NAMESPACE:    ${CM_VAULT_NAMESPACE}
+      VAULT_ADDR: ${CM_VAULT_ADDR}
+      VAULT_TOKEN: ${CM_VAULT_TOKEN}
+      VAULT_SECRET_PATH: ${CM_VAULT_SECRET_PATH}
+      VAULT_NAMESPACE: ${CM_VAULT_NAMESPACE}
     networks:
       - project-lex
 
@@ -113,7 +113,12 @@ services:
       - ME_CONFIG_BASICAUTH=false
     secrets:
       - mongo_password
-    entrypoint: ["/bin/sh", "-c", "export ME_CONFIG_MONGODB_ADMINPASSWORD=$(cat /run/secrets/mongo_password) && node app"]
+    entrypoint:
+      [
+        "/bin/sh",
+        "-c",
+        "export ME_CONFIG_MONGODB_ADMINPASSWORD=$(cat /run/secrets/mongo_password) && node app",
+      ]
     ports:
       - "8081:8081"
     restart: unless-stopped
@@ -128,6 +133,10 @@ secrets:
 
 volumes:
   timescale_data:
+    name: timescale_data
   vault_data:
+    name: vault_data
   mongodb_data:
+    name: mongodb_data
   mongodb_config:
+    name: mongodb_config

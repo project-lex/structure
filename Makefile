@@ -1,10 +1,12 @@
-.PHONY: clone dry-run install-deps docker-build cm up down dns-setup
+.PHONY: clone dry-run install-deps docker-build cm up down dns-setup vault-setup up-build build
 
 # Image name (override when calling make: `make IMAGE_NAME=your/name build`)
 IMAGE_NAME ?= project-lex/clone:latest
 DOCKERFILE ?= scripts/Dockerfile.clone
 
-DNS_IMAGE := alpine:3.20
+DNS_IMAGE      := alpine:3.20
+COMPOSE_PROJECT := $(notdir $(abspath .))
+DOCKER_NETWORK  := $(COMPOSE_PROJECT)_project-lex
 
 # Build the small container image used to run the clone script.
 docker-build:
@@ -39,6 +41,10 @@ up:
 down:
 	docker compose --env-file docker/.env down
 
+up-build: build up vault-setup
+
+build: cm
+
 # Writes project-lex hostnames into the system hosts file via a temporary Docker container.
 # Windows: run Git Bash as Administrator. Linux/macOS: sudo prompt will appear.
 dns-setup:
@@ -51,5 +57,13 @@ dns-setup:
 	| sudo tee "$$HOSTS_FILE" > /dev/null && \
 	echo "Updated $$HOSTS_FILE"
 
+vault-setup:
+	@docker run --rm -it \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v "$(abspath .)":/workspace \
+		-w /workspace \
+		--network $(DOCKER_NETWORK) \
+		-e VAULT_HOST=vault \
+		docker:cli sh -c "apk add --no-cache bash curl > /dev/null 2>&1 && bash vault-init.sh"
 
 setup: clone dns-setup
