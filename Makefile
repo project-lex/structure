@@ -73,4 +73,4 @@ vault-setup:
 		-e VAULT_HOST=vault \
 		docker:cli sh -c "apk add --no-cache bash curl > /dev/null 2>&1 && bash vault-init.sh"
 
-setup: clone dns-setup
+setup: clone dns-setup up-build

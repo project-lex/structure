@@ -13,5 +13,9 @@ local. {
         172.17.0.1 timescaledb.localhost
         172.17.0.1 mongodb.localhost
         172.17.0.1 config-management.localhost
+        172.17.0.1 configs.localhost
+        172.17.0.1 filebrowser.localhost
+        172.17.0.1 mongo-express.localhost
+        172.17.0.1 traefik.localhost
     }
 }
