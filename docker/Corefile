@@ -1,6 +1,11 @@
 .:53 {
     errors
     cache 30
+    hosts {
+        172.17.0.1 filebrowser
+        172.17.0.1 mongo-express
+        172.17.0.1 config
+    }
     forward . 8.8.8.8 8.8.4.4
     log
 }
@@ -13,9 +18,8 @@ local. {
         172.17.0.1 timescaledb.localhost
         172.17.0.1 mongodb.localhost
         172.17.0.1 config-management.localhost
-        172.17.0.1 configs.localhost
         172.17.0.1 filebrowser.localhost
         172.17.0.1 mongo-express.localhost
-        172.17.0.1 traefik.localhost
+        172.17.0.1 configs.localhost
     }
 }

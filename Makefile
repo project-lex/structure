@@ -50,7 +50,8 @@ down:
 
 up-build: build up vault-setup
 
-build: cm cv
+build: 
+	cm cv
 
 # Writes project-lex hostnames into the system hosts file via a temporary Docker container.
 # Windows: run Git Bash as Administrator. Linux/macOS: sudo prompt will appear.
