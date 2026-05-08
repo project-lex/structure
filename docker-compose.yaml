@@ -161,10 +161,10 @@ services:
       MONGODB_URI: ${CM_MONGODB_URI}
       MONGODB_DB: ${CM_MONGODB_DB}
       MONGODB_COLLECTION: ${CM_MONGODB_COLLECTION}
-      VAULT_ADDR: ${CM_VAULT_ADDR}
-      VAULT_TOKEN: ${CM_VAULT_TOKEN}
+      VAULT_ADDR: ${VAULT_ADDR}
+      VAULT_TOKEN: ${VAULT_TOKEN}
       VAULT_SECRET_PATH: ${CM_VAULT_SECRET_PATH}
-      VAULT_NAMESPACE: ${CM_VAULT_NAMESPACE}
+      VAULT_NAMESPACE: ${VAULT_NAMESPACE}
     networks:
       - project-lex
 
@@ -183,7 +183,7 @@ services:
     networks:
       - project-lex
 
-  sheduler:
+  scheduler:
     image: project-lex/scheduler:dev-local
     container_name: scheduler
     ports:
@@ -192,6 +192,16 @@ services:
       PORT: ${SCHEDULER_PORT}
       NODE_ENV: ${SCHEDULER_NODE_ENV}
       CONFIG_BASE_URL: ${SCHEDULER_CONFIG_BASE_URL}
+      VAULT_ADDR: ${VAULT_ADDR}
+      VAULT_TOKEN: ${VAULT_TOKEN}
+      VAULT_SECRET_PATH: ${SCHEDULER_VAULT_SECRET_PATH}
+      MONGO_URI: ${SCHEDULER_MONGO_URI}
+      MONGO_DATABASE: ${SCHEDULER_MONGO_DATABASE}
+      MONGO_COLLECTION: ${SCHEDULER_MONGO_COLLECTION}
+      MONGO_AUTH_SOURCE: ${SCHEDULER_MONGO_AUTH_SOURCE}
+      WEBHOOK_URL: ${SCHEDULER_WEBHOOK_URL}
+    secrets:
+      - mongo_password
     restart: unless-stopped
     networks:
       - project-lex

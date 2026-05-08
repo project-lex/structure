@@ -42,6 +42,14 @@ cv:
 	@cd ../config-validator && docker build -t project-lex/config-validator:dev-local .
 	@cd ./ && docker compose --env-file docker/.env up -d
 
+scheduler:
+	@if [ ! -d "$(abspath ../scheduler)" ]; then \
+		echo "Directory ../scheduler not found"; exit 1; \
+	fi
+	@echo "Building project-lex/scheduler:dev-local from ../scheduler"
+	@cd ../scheduler && docker build -t project-lex/scheduler:dev-local .
+	@cd ./ && docker compose --env-file docker/.env up -d
+
 up:
 	docker compose --env-file docker/.env up -d
 
@@ -50,8 +58,7 @@ down:
 
 up-build: build up vault-setup
 
-build: 
-	cm cv
+build: cm cv scheduler
 
 # Writes project-lex hostnames into the system hosts file via a temporary Docker container.
 # Windows: run Git Bash as Administrator. Linux/macOS: sudo prompt will appear.
