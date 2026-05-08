@@ -3,6 +3,8 @@ networks:
     driver: bridge
 
 services:
+
+# infrastructure services
   dns:
     image: coredns/coredns:latest
     platform: linux/arm64/v8
@@ -70,40 +72,6 @@ services:
                -c work_mem=32MB
                -c maintenance_work_mem=128MB
                -c effective_cache_size=1GB
-    networks:
-      - project-lex
-
-  config-management:
-    image: project-lex/config-management:dev-local
-    container_name: config-management
-    ports:
-      - "4000:3000"
-    environment:
-      PORT: ${CM_PORT}
-      NODE_ENV: ${CM_NODE_ENV}
-      GIT_TOKEN: ${CM_GIT_TOKEN}
-      GIT_USERNAME: ${CM_GIT_USERNAME}
-      GIT_URL: ${CM_GIT_URL}
-      GIT_BRANCH: ${CM_GIT_BRANCH}
-      MONGODB_URI: ${CM_MONGODB_URI}
-      MONGODB_DB: ${CM_MONGODB_DB}
-      MONGODB_COLLECTION: ${CM_MONGODB_COLLECTION}
-      VAULT_ADDR: ${CM_VAULT_ADDR}
-      VAULT_TOKEN: ${CM_VAULT_TOKEN}
-      VAULT_SECRET_PATH: ${CM_VAULT_SECRET_PATH}
-      VAULT_NAMESPACE: ${CM_VAULT_NAMESPACE}
-    networks:
-      - project-lex
-
-  config-validator:
-    image: project-lex/config-validator:dev-local
-    container_name: config-validator
-    ports:
-      - "4001:3000"
-    environment:
-      PORT: ${CV_PORT}
-      NODE_ENV: ${CV_NODE_ENV}
-      CONFIG_BASE_URL: ${CV_CONFIG_BASE_URL}
     networks:
       - project-lex
 
@@ -177,6 +145,57 @@ services:
     networks:
       - project-lex
 
+# application services
+  config-management:
+    image: project-lex/config-management:dev-local
+    container_name: config-management
+    ports:
+      - "4000:3000"
+    environment:
+      PORT: ${CM_PORT}
+      NODE_ENV: ${CM_NODE_ENV}
+      GIT_TOKEN: ${CM_GIT_TOKEN}
+      GIT_USERNAME: ${CM_GIT_USERNAME}
+      GIT_URL: ${CM_GIT_URL}
+      GIT_BRANCH: ${CM_GIT_BRANCH}
+      MONGODB_URI: ${CM_MONGODB_URI}
+      MONGODB_DB: ${CM_MONGODB_DB}
+      MONGODB_COLLECTION: ${CM_MONGODB_COLLECTION}
+      VAULT_ADDR: ${CM_VAULT_ADDR}
+      VAULT_TOKEN: ${CM_VAULT_TOKEN}
+      VAULT_SECRET_PATH: ${CM_VAULT_SECRET_PATH}
+      VAULT_NAMESPACE: ${CM_VAULT_NAMESPACE}
+    networks:
+      - project-lex
+
+  config-validator:
+    image: project-lex/config-validator:dev-local
+    container_name: config-validator
+    ports:
+      - "4001:3000"
+    environment:
+      PORT: ${CV_PORT}
+      NODE_ENV: ${CV_NODE_ENV}
+      CONFIG_BASE_URL: ${CV_CONFIG_BASE_URL}
+    volumes:
+      - config-validator_data:/resources
+    restart: unless-stopped
+    networks:
+      - project-lex
+
+  sheduler:
+    image: project-lex/scheduler:dev-local
+    container_name: scheduler
+    ports:
+      - "4002:8080"
+    environment:
+      PORT: ${SCHEDULER_PORT}
+      NODE_ENV: ${SCHEDULER_NODE_ENV}
+      CONFIG_BASE_URL: ${SCHEDULER_CONFIG_BASE_URL}
+    restart: unless-stopped
+    networks:
+      - project-lex
+
 secrets:
   postgres_password:
     file: ./secrets/postgres_password.txt
@@ -196,3 +215,5 @@ volumes:
     name: configs_data
   filebrowser_db:
     name: filebrowser_db
+  config-validator_data:
+    name: config-validator_data
