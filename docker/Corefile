@@ -22,5 +22,6 @@ local. {
         172.17.0.1 filebrowser.localhost
         172.17.0.1 mongo-express.localhost
         172.17.0.1 configs.localhost
+        172.17.0.1 scheduler.localhost
     }
 }

@@ -177,6 +177,13 @@ services:
       PORT: ${CV_PORT}
       NODE_ENV: ${CV_NODE_ENV}
       CONFIG_BASE_URL: ${CV_CONFIG_BASE_URL}
+      VAULT_ADDR: ${VAULT_ADDR}
+      VAULT_TOKEN: ${VAULT_TOKEN}
+      VAULT_SECRET_PATH: ${CV_VAULT_SECRET_PATH}
+      MONGODB_URI: ${CV_MONGODB_URI}
+      MONGODB_DB: ${CV_MONGODB_DB}
+      MONGODB_COLLECTION: ${CV_MONGODB_COLLECTION}
+      MONGODB_AUTH_SOURCE: ${CV_MONGODB_AUTH_SOURCE}
     volumes:
       - config-validator_data:/resources
     restart: unless-stopped
