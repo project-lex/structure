@@ -144,15 +144,13 @@ services:
     networks:
       - project-lex
 
-# application services
+  # application services
   config-management:
     image: project-lex/config-management:dev-local
     container_name: config-management
     ports:
       - "4000:3000"
     environment:
-      PORT: ${CM_PORT}
-      NODE_ENV: ${CM_NODE_ENV}
       GIT_TOKEN: ${CM_GIT_TOKEN}
       GIT_USERNAME: ${CM_GIT_USERNAME}
       GIT_URL: ${CM_GIT_URL}
