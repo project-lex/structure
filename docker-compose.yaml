@@ -3,8 +3,7 @@ networks:
     driver: bridge
 
 services:
-
-# infrastructure services
+  # infrastructure services
   dns:
     image: coredns/coredns:latest
     platform: linux/arm64/v8
@@ -209,6 +208,25 @@ services:
       WEBHOOK_URL: ${SCHEDULER_WEBHOOK_URL}
     secrets:
       - mongo_password
+    restart: unless-stopped
+    networks:
+      - project-lex
+
+  queue-management:
+    image: project-lex/queue-management:dev-local
+    container_name: queue-management
+    ports:
+      - "4003:3000"
+    environment:
+      VAULT_ADDR: ${VAULT_ADDR}
+      VAULT_TOKEN: ${VAULT_TOKEN}
+      VAULT_NAMESPACE: ${VAULT_NAMESPACE}
+      VAULT_SECRET_PATH: ${QM_VAULT_SECRET_PATH}
+      FORWARD_URL: ${QM_FORWARD_URL}
+      MONGODB_URI: ${QM_MONGODB_URI}
+      MONGODB_DB: ${QM_MONGODB_DB}
+      MONGODB_COLLECTION: ${QM_MONGODB_COLLECTION}
+      MONGODB_AUTH_SOURCE: ${QM_MONGODB_AUTH_SOURCE}
     restart: unless-stopped
     networks:
       - project-lex

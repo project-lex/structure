@@ -50,6 +50,14 @@ scheduler:
 	@cd ../scheduler && docker build -t project-lex/scheduler:dev-local .
 	@cd ./ && docker compose --env-file docker/.env up -d
 
+qm:
+	@if [ ! -d "$(abspath ../queue-management)" ]; then \
+		echo "Directory ../queue-management not found"; exit 1; \
+	fi
+	@echo "Building project-lex/queue-management:dev-local from ../queue-management"
+	@cd ../queue-management && docker build -t project-lex/queue-management:dev-local .
+	@cd ./ && docker compose --env-file docker/.env up -d
+
 up:
 	docker compose --env-file docker/.env up -d
 
@@ -58,7 +66,7 @@ down:
 
 up-build: build up vault-setup
 
-build: cm cv scheduler
+build: cm cv scheduler qm
 
 # Writes project-lex hostnames into the system hosts file via a temporary Docker container.
 # Windows: run Git Bash as Administrator. Linux/macOS: sudo prompt will appear.
