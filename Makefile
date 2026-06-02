@@ -32,7 +32,7 @@ cm:
 	fi
 	@echo "Building project-lex/config-management:dev-local from ../config-management"
 	@cd ../config-management && docker build -t project-lex/config-management:dev-local .
-	@cd ./ && docker compose --env-file docker/.env up -d
+#	@cd ./ && docker compose --env-file docker/.env up -d
 
 cv:
 	@if [ ! -d "$(abspath ../config-validator)" ]; then \
@@ -40,7 +40,6 @@ cv:
 	fi
 	@echo "Building project-lex/config-validator:dev-local from ../config-validator"
 	@cd ../config-validator && docker build -t project-lex/config-validator:dev-local .
-	@cd ./ && docker compose --env-file docker/.env up -d
 
 scheduler:
 	@if [ ! -d "$(abspath ../scheduler)" ]; then \
@@ -48,7 +47,6 @@ scheduler:
 	fi
 	@echo "Building project-lex/scheduler:dev-local from ../scheduler"
 	@cd ../scheduler && docker build -t project-lex/scheduler:dev-local .
-	@cd ./ && docker compose --env-file docker/.env up -d
 
 qm:
 	@if [ ! -d "$(abspath ../queue-management)" ]; then \
@@ -56,7 +54,6 @@ qm:
 	fi
 	@echo "Building project-lex/queue-management:dev-local from ../queue-management"
 	@cd ../queue-management && docker build -t project-lex/queue-management:dev-local .
-	@cd ./ && docker compose --env-file docker/.env up -d
 
 up:
 	docker compose --env-file docker/.env up -d
@@ -64,7 +61,10 @@ up:
 down:
 	docker compose --env-file docker/.env down
 
-up-build: build up vault-setup
+up-build: 
+	build 
+	up 
+	vault-setup
 
 build: cm cv scheduler qm
 
