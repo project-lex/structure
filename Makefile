@@ -1,4 +1,4 @@
-.PHONY: clone dry-run install-deps docker-build cm up down dns-setup vault-setup up-build build
+.PHONY: ui ui-dev clone dry-run install-deps docker-build cm up down dns-setup vault-setup up-build build
 
 # Image name (override when calling make: `make IMAGE_NAME=your/name build`)
 IMAGE_NAME ?= project-lex/clone:latest
@@ -68,6 +68,9 @@ up-build:
 
 build: cm cv scheduler qm
 
+restart ${service}:
+	docker compose --env-file docker/.env restart ${service}
+
 # Writes project-lex hostnames into the system hosts file via a temporary Docker container.
 # Windows: run Git Bash as Administrator. Linux/macOS: sudo prompt will appear.
 dns-setup:
@@ -89,4 +92,18 @@ vault-setup:
 		-e VAULT_HOST=vault \
 		docker:cli sh -c "apk add --no-cache bash curl > /dev/null 2>&1 && bash vault-init.sh"
 
-setup: clone dns-setup up-build
+setup: clone dns-setup build vault-setup
+	@echo "Setup complete. You can now run 'make up' to start the services."
+
+ui:
+	docker build -t project-lex/structure-ui ui
+	docker run --rm --name structure-ui \
+		-p 127.0.0.1:81:81 \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v "$(abspath .)":"$(abspath .)" \
+		-e PROJECT_ROOT="$(abspath .)" \
+		-d \
+		project-lex/structure-ui
+
+ui-dev:
+	@cd ui && { [ -d node_modules ] || npm install; } && npm run build --silent && UI_PORT=8787 npm start --silent
